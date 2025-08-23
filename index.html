@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Object Detection</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Some basic CSS styling for the page layout
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #chart-container {
+            width: 60vw;
+            margin: 20px auto;
+        }
+        #video {
+            width: 250px;
+            height: auto;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+        }
+    </style>  -->
+    <style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+        color: #333;
+    }
+
+    h1 {
+        color: #2c3e50;
+        text-align: center;
+        padding-top: 50px;
+        margin-bottom: 30px;
+    }
+
+    .container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;  /* Vertically center video */
+        gap: 40px;
+        max-width: 1200px;
+        margin: 60px auto; /* Push content lower */
+        padding: 20px;
+    }
+
+    #video {
+        width: 320px;
+        height: auto;
+        border: 2px solid #2c3e50;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    #chart-container {
+        flex: 1;
+        min-width: 350px;
+        max-width: 600px;
+        background-color: rgba(255, 255, 255, 0.95);
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    footer {
+    text-align: right;           /* Moves text to the right */
+    margin-top: 60px;
+    padding: 15px 40px;          /* Add right padding to push it inward */
+    font-size: 16px;
+    color: #2c3e50;
+    background: rgba(255, 255, 255, 0.3);
+    border-top: 1px solid #ccc;
+    font-weight: 500;
+}
+
+
+</style>
+
+
+</head>
+<body>
+    <h1>Live Object Detection</h1>
+
+    <!-- Wrap video and chart in a flex container -->
+    <div class="container">
+        <img id="video" src="{{ url_for('video_feed') }}" alt="Video Feed"/>
+
+        <div id="chart-container">
+            <canvas id="confidenceChart"></canvas>
+        </div>
+    </div>
+<script>
+    //List of labels (object classes we want to track)
+    const labels = ['Laptop', 'Bottle', 'Mouse', 'Watch', 'Ishpreet'];
+
+    // Create chart data structure with zeroed data
+    const data = {
+        labels: labels,
+        datasets: [{
+            label: 'Confidence',
+            data: labels.map(() => 0),   // Start with 0 confidence for each class
+            backgroundColor: 'rgba(54, 162, 235, 0.7)'  // Light blue bars
+        }]
+    };
+
+    // Configuration for the bar chart
+    const config = {
+        type: 'bar',       // Set chart type to bar
+        data: data,        // Link data to chart
+        options: {
+            scales: {
+                y: {
+                    min: 0,  // Minimum y value
+                    max: 1   // Maximum y value (100% confidence)
+                }
+            }
+        }
+    };
+
+    // Create the actual chart object
+    const chart = new Chart(
+        document.getElementById('confidenceChart'),
+        config
+    );
+
+    // Function to fetch confidence data from Flask every second
+    async function fetchData() {
+        const res = await fetch('/data');
+        const json = await res.json();
+
+        // Update chart data using new confidence values
+        chart.data.datasets[0].data = labels.map(label => json[label]);
+        chart.update();
+    }
+
+    // Call fetchData every 1 second
+    setInterval(fetchData, 1000);
+</script>
+</body>
+<footer>
+    <p>-Made by Ishpreet Singh 👨‍💻</p>
+</footer>
+
+</html>
